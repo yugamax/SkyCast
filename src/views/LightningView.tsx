@@ -20,6 +20,7 @@ import {
   TimelineStep 
 } from '../types/weather';
 import { simulationEngine } from '../services/simulationEngine';
+import { ambientAudio } from '../services/ambientAudioService';
 import { useTheme } from '../context/ThemeContext';
 import { InfoButton } from '../components/Common/InfoButton';
 
@@ -203,13 +204,23 @@ export const LightningView: React.FC<LightningViewProps> = ({
         {/* Right: Recent High-Current Strikes Table (4 cols) */}
         <div className="xl:col-span-4 space-y-3">
           <div className="p-4 rounded-2xl ios-glass-card space-y-3 shadow-sm">
-            <h3 className="font-bold text-xs uppercase tracking-wider flex items-center justify-between border-b border-white/[0.06] pb-3 text-white">
-              <span className="flex items-center space-x-2">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3 text-white">
+              <h3 className="font-bold text-xs uppercase tracking-wider flex items-center space-x-2">
                 <Zap className="w-4 h-4 text-amber-400" />
                 <span>Recent Strike Telemetry</span>
-              </span>
-              <span className="text-[10px] text-emerald-400 font-bold">SUB-SECOND FEED</span>
-            </h3>
+              </h3>
+              <button
+                onClick={() => {
+                  ambientAudio.unmute();
+                  ambientAudio.triggerLightning(1.2);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/30 text-amber-300 text-[10px] font-bold flex items-center space-x-1 transition-all cursor-pointer shadow-xs"
+                title="Audition Procedural Lightning Strike Sound"
+              >
+                <Zap className="w-3 h-3 text-amber-400" />
+                <span>Play Strike Audio</span>
+              </button>
+            </div>
 
             <div className="space-y-2 max-h-[360px] sm:max-h-[510px] overflow-y-auto pr-1 scrollbar-thin">
               {filteredStrikes.slice(0, 10).map((strike) => (

@@ -293,7 +293,7 @@ export const AmbientAtmosphericCanvas: React.FC<AmbientAtmosphericCanvasProps> =
         nextTime: performance.now() + 50
       };
       flashAlphaRef.current = 0.35;
-      ambientAudio.triggerThunder();
+      ambientAudio.triggerLightning(1.0);
     };
 
     const scheduleNextLightning = () => {
@@ -754,7 +754,7 @@ export const AmbientAtmosphericCanvas: React.FC<AmbientAtmosphericCanvasProps> =
                 <button
                   onClick={() => {
                     flashAlphaRef.current = 0.55;
-                    ambientAudio.triggerThunder();
+                    ambientAudio.triggerLightning(1.2);
                   }}
                   className="w-full py-1.5 rounded-xl border border-rose-500/30 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 font-semibold text-[11px] flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
                 >

@@ -1,5 +1,6 @@
 // Procedural Ambient Weather Audio Synthesizer (Web Audio API)
 // 100% Client-side procedural audio synthesis with zero external asset dependencies.
+// Clean, natural rain acoustic texture with zero synthetic humming/bass drones.
 
 export type WeatherAudioCondition = 'CLEAR' | 'CLOUDY' | 'RAIN' | 'STORM' | 'MIST' | 'HAZE';
 
@@ -7,15 +8,21 @@ class AmbientAudioEngine {
   private ctx: AudioContext | null = null;
   private isRunning: boolean = false;
   private isMutedState: boolean = false;
-  private volume: number = 0.20; // Default gentle ambient volume (20%)
+  private volume: number = 0.06; // Default gentle, soft ambient volume (6%)
   private masterGain: GainNode | null = null;
+  
+  // Rain Synthesizer Nodes
   private rainGain: GainNode | null = null;
-  private windGain: GainNode | null = null;
-  private breezeGain: GainNode | null = null;
   private rainFilter: BiquadFilterNode | null = null;
-  private windFilter: BiquadFilterNode | null = null;
+  private rainHighpass: BiquadFilterNode | null = null;
   private noiseNode: AudioBufferSourceNode | null = null;
+  
+  // Air / Wind Breeze Nodes (Clean, airy, NO low-frequency humming)
+  private windGain: GainNode | null = null;
+  private windFilter: BiquadFilterNode | null = null;
+  private windHighpass: BiquadFilterNode | null = null;
   private windNoiseNode: AudioBufferSourceNode | null = null;
+  
   private thunderTimer: number | null = null;
   private dropImpulseTimer: number | null = null;
   private condition: WeatherAudioCondition = 'STORM';
@@ -39,7 +46,7 @@ class AmbientAudioEngine {
       this.initContext();
     }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => { });
+      this.ctx.resume().catch(() => {});
     }
     if (!this.isRunning && !this.isMutedState) {
       this.start();
@@ -54,7 +61,7 @@ class AmbientAudioEngine {
         this.ctx = new AudioCtxClass();
       }
       if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume().catch(() => { });
+        this.ctx.resume().catch(() => {});
       }
       return true;
     } catch (e) {
@@ -63,14 +70,14 @@ class AmbientAudioEngine {
     }
   }
 
-  // Generate pink noise buffer for realistic continuous rain sound
+  // Generate pink noise buffer for clean, soothing natural rainfall
   private createPinkNoiseBuffer(): AudioBuffer {
     if (!this.ctx) throw new Error('No audio context');
-    const bufferSize = this.ctx.sampleRate * 3; // 3 seconds continuous loop
+    const bufferSize = this.ctx.sampleRate * 3;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-
+    
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
       b0 = 0.99886 * b0 + white * 0.0555179;
@@ -85,18 +92,14 @@ class AmbientAudioEngine {
     return buffer;
   }
 
-  // Generate brown noise buffer for realistic deep howling wind gusting
-  private createBrownNoiseBuffer(): AudioBuffer {
+  // Generate white noise buffer for airy rustle and electrical lightning snaps
+  private createWhiteNoiseBuffer(): AudioBuffer {
     if (!this.ctx) throw new Error('No audio context');
-    const bufferSize = this.ctx.sampleRate * 4;
+    const bufferSize = this.ctx.sampleRate * 2;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
-    let lastOut = 0.0;
-
     for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      lastOut = (lastOut + 0.02 * white) / 1.02;
-      data[i] = lastOut * 1.2;
+      data[i] = (Math.random() * 2 - 1) * 0.2;
     }
     return buffer;
   }
@@ -111,79 +114,67 @@ class AmbientAudioEngine {
 
       // Cleanup existing sources if any
       if (this.noiseNode) {
-        try { this.noiseNode.stop(); } catch { }
+        try { this.noiseNode.stop(); } catch {}
         this.noiseNode.disconnect();
       }
       if (this.windNoiseNode) {
-        try { this.windNoiseNode.stop(); } catch { }
+        try { this.windNoiseNode.stop(); } catch {}
         this.windNoiseNode.disconnect();
       }
 
-      // Master Gain Node
+      // Master Gain Node with smooth transition
       this.masterGain = this.ctx.createGain();
       const currentGain = this.isMutedState ? 0 : this.volume;
       this.masterGain.gain.setValueAtTime(currentGain, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
 
-      // 1. Soft Rain Synthesizer (Velvety Pink Noise + Warm Lowpass/Highpass filters)
+      // 1. Natural Rain Shower Synthesizer (Zero humming - 350Hz highpass cutoff prevents any bass hum)
       const rainBuffer = this.createPinkNoiseBuffer();
       this.noiseNode = this.ctx.createBufferSource();
       this.noiseNode.buffer = rainBuffer;
       this.noiseNode.loop = true;
 
+      this.rainHighpass = this.ctx.createBiquadFilter();
+      this.rainHighpass.type = 'highpass';
+      this.rainHighpass.frequency.setValueAtTime(380, this.ctx.currentTime); // Cuts out ALL low hum / drone
+
       this.rainFilter = this.ctx.createBiquadFilter();
       this.rainFilter.type = 'lowpass';
-      this.rainFilter.frequency.setValueAtTime(1800, this.ctx.currentTime);
-      this.rainFilter.Q.setValueAtTime(0.4, this.ctx.currentTime);
-
-      const rainHighpass = this.ctx.createBiquadFilter();
-      rainHighpass.type = 'highpass';
-      rainHighpass.frequency.setValueAtTime(220, this.ctx.currentTime);
+      this.rainFilter.frequency.setValueAtTime(2400, this.ctx.currentTime);
+      this.rainFilter.Q.setValueAtTime(0.2, this.ctx.currentTime);
 
       this.rainGain = this.ctx.createGain();
-      this.rainGain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+      this.rainGain.gain.setValueAtTime(0.03, this.ctx.currentTime);
 
-      this.noiseNode.connect(this.rainFilter);
-      this.rainFilter.connect(rainHighpass);
-      rainHighpass.connect(this.rainGain);
+      this.noiseNode.connect(this.rainHighpass);
+      this.rainHighpass.connect(this.rainFilter);
+      this.rainFilter.connect(this.rainGain);
       this.rainGain.connect(this.masterGain);
       this.noiseNode.start(0);
 
-      // 2. Dynamic Warm Wind Synthesizer (Brownian Noise + Gentle Resonant Lowpass)
-      const windBuffer = this.createBrownNoiseBuffer();
+      // 2. Soft Whispering Wind Breeze (Clean airy hiss, NO low resonant humming)
+      const windBuffer = this.createWhiteNoiseBuffer();
       this.windNoiseNode = this.ctx.createBufferSource();
       this.windNoiseNode.buffer = windBuffer;
       this.windNoiseNode.loop = true;
 
+      this.windHighpass = this.ctx.createBiquadFilter();
+      this.windHighpass.type = 'highpass';
+      this.windHighpass.frequency.setValueAtTime(450, this.ctx.currentTime); // Removes all bass drone
+
       this.windFilter = this.ctx.createBiquadFilter();
-      this.windFilter.type = 'lowpass';
-      this.windFilter.frequency.setValueAtTime(280, this.ctx.currentTime);
-      this.windFilter.Q.setValueAtTime(1.1, this.ctx.currentTime);
+      this.windFilter.type = 'bandpass';
+      this.windFilter.frequency.setValueAtTime(950, this.ctx.currentTime);
+      this.windFilter.Q.setValueAtTime(0.5, this.ctx.currentTime);
 
       this.windGain = this.ctx.createGain();
-      this.windGain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+      this.windGain.gain.setValueAtTime(0.012, this.ctx.currentTime);
 
-      this.windNoiseNode.connect(this.windFilter);
+      this.windNoiseNode.connect(this.windHighpass);
+      this.windHighpass.connect(this.windFilter);
       this.windFilter.connect(this.windGain);
       this.windGain.connect(this.masterGain);
       this.windNoiseNode.start(0);
-
-      // 3. Clear Air Harmonic Ambient Tone (Gentle subtle undertone)
-      const breezeOsc = this.ctx.createOscillator();
-      breezeOsc.type = 'sine';
-      breezeOsc.frequency.setValueAtTime(96, this.ctx.currentTime);
-
-      const breezeFilter = this.ctx.createBiquadFilter();
-      breezeFilter.type = 'lowpass';
-      breezeFilter.frequency.setValueAtTime(180, this.ctx.currentTime);
-
-      this.breezeGain = this.ctx.createGain();
-      this.breezeGain.gain.setValueAtTime(0.015, this.ctx.currentTime);
-
-      breezeOsc.connect(breezeFilter);
-      breezeFilter.connect(this.breezeGain);
-      this.breezeGain.connect(this.masterGain);
-      breezeOsc.start(0);
 
       this.isRunning = true;
       this.applyWeatherParameters();
@@ -194,7 +185,7 @@ class AmbientAudioEngine {
     }
   }
 
-  // Individual Raindrop Impulse Clicks for gentle acoustic texture on glass
+  // Natural Pitter-Patter Raindrop Clicks (Random pitch, realistic texture on glass)
   private startRainDropImpulses() {
     if (this.dropImpulseTimer) clearInterval(this.dropImpulseTimer);
     if (typeof window === 'undefined') return;
@@ -202,10 +193,10 @@ class AmbientAudioEngine {
     this.dropImpulseTimer = window.setInterval(() => {
       if (!this.ctx || this.isMutedState || !this.isRunning || (this.condition !== 'RAIN' && this.condition !== 'STORM')) return;
 
-      if (Math.random() < (this.condition === 'STORM' ? 0.45 : 0.25)) {
+      if (Math.random() < (this.condition === 'STORM' ? 0.65 : 0.35)) {
         this.triggerSingleDropClick();
       }
-    }, 280);
+    }, 180);
   }
 
   private triggerSingleDropClick() {
@@ -216,131 +207,148 @@ class AmbientAudioEngine {
       const gain = this.ctx.createGain();
       const filter = this.ctx.createBiquadFilter();
 
-      const freq = 1200 + Math.random() * 1400;
+      // Pitch variance between 1.2 kHz and 3.5 kHz for natural droplet acoustic variety
+      const freq = 1400 + Math.random() * 2000;
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.exponentialRampToValueAtTime(240, now + 0.03);
+      osc.frequency.exponentialRampToValueAtTime(380, now + 0.025);
 
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(freq, now);
-      filter.Q.setValueAtTime(2.0, now);
+      filter.Q.setValueAtTime(3.0, now);
 
-      gain.gain.setValueAtTime(0.006 * this.rainIntensity, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+      gain.gain.setValueAtTime(0.003 * this.rainIntensity, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
 
       osc.connect(filter);
       filter.connect(gain);
       gain.connect(this.masterGain);
 
       osc.start(now);
-      osc.stop(now + 0.035);
-    } catch { }
+      osc.stop(now + 0.028);
+    } catch {}
   }
 
+  // Periodic Thunder Scheduler in Storm mode
   private scheduleThunder() {
     if (this.thunderTimer) clearTimeout(this.thunderTimer);
     if (!this.isRunning || this.condition !== 'STORM') return;
 
-    // Distant, infrequent thunder interval (30s to 60s)
-    const nextInterval = 30000 + Math.random() * 30000;
+    // Trigger every 25 to 45 seconds during storm mode
+    const nextInterval = 25000 + Math.random() * 20000;
     this.thunderTimer = window.setTimeout(() => {
-      this.triggerThunder();
+      this.triggerLightning();
       this.scheduleThunder();
     }, nextInterval);
   }
 
-  public triggerThunder() {
+  /**
+   * ⚡ Real-Time Procedural Lightning & Thunder Sound Synthesizer
+   * 3-Stage Acoustic Simulation:
+   * 1. Crisp Electrical Arc Snap & Crackle (High-frequency discharge)
+   * 2. Explosive Acoustic Shockwave Crack (Sudden supersonic expansion)
+   * 3. Reverberant Rolling Thunder Rumble (Smooth low-frequency atmospheric roll)
+   */
+  public triggerLightning(intensity: number = 1.0) {
     this.unlock();
     if (!this.ctx || this.isMutedState || !this.masterGain) return;
 
     try {
       const now = this.ctx.currentTime;
 
-      // 1. Distant Atmospheric Diffuse Rumble (Smooth, low-frequency bandpass)
-      const crackOsc = this.ctx.createOscillator();
-      const crackGain = this.ctx.createGain();
-      const crackFilter = this.ctx.createBiquadFilter();
+      // =========================================================================
+      // 1. ELECTRICAL LIGHTNING ARC DISCHARGE SNAP (High-frequency crisp crackle)
+      // =========================================================================
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.12);
+      const snapBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const snapData = snapBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        // Modulated random spark spikes
+        const env = Math.exp(-i / (bufferSize * 0.25));
+        snapData[i] = (Math.random() * 2 - 1) * env * (Math.random() > 0.4 ? 1 : 0);
+      }
 
-      crackOsc.type = 'sine';
-      crackOsc.frequency.setValueAtTime(140, now);
-      crackOsc.frequency.exponentialRampToValueAtTime(32, now + 0.4);
+      const snapSource = this.ctx.createBufferSource();
+      snapSource.buffer = snapBuffer;
 
-      crackFilter.type = 'lowpass';
-      crackFilter.frequency.setValueAtTime(280, now);
-      crackFilter.Q.setValueAtTime(0.8, now);
+      const snapFilter = this.ctx.createBiquadFilter();
+      snapFilter.type = 'highpass';
+      snapFilter.frequency.setValueAtTime(2800, now);
 
-      crackGain.gain.setValueAtTime(0.005, now);
-      crackGain.gain.linearRampToValueAtTime(0.04, now + 0.06);
-      crackGain.gain.exponentialRampToValueAtTime(0.0005, now + 0.5);
+      const snapGain = this.ctx.createGain();
+      snapGain.gain.setValueAtTime(0.028 * intensity, now);
+      snapGain.gain.exponentialRampToValueAtTime(0.0005, now + 0.12);
 
-      crackOsc.connect(crackFilter);
-      crackFilter.connect(crackGain);
-      crackGain.connect(this.masterGain);
+      snapSource.connect(snapFilter);
+      snapFilter.connect(snapGain);
+      snapGain.connect(this.masterGain);
+      snapSource.start(now);
 
-      crackOsc.start(now);
-      crackOsc.stop(now + 0.55);
+      // =========================================================================
+      // 2. SHOCKWAVE THUNDER CLAP (Sudden sharp atmospheric acoustic crack)
+      // =========================================================================
+      const clapOsc = this.ctx.createOscillator();
+      const clapGain = this.ctx.createGain();
+      const clapFilter = this.ctx.createBiquadFilter();
 
-      // 2. Deep Sub-Bass Rolling Cinematic Rumble (Warm 55Hz down to 20Hz)
+      clapOsc.type = 'triangle';
+      clapOsc.frequency.setValueAtTime(280, now + 0.03);
+      clapOsc.frequency.exponentialRampToValueAtTime(65, now + 0.25);
+
+      clapFilter.type = 'bandpass';
+      clapFilter.frequency.setValueAtTime(320, now + 0.03);
+      clapFilter.Q.setValueAtTime(1.5, now + 0.03);
+
+      clapGain.gain.setValueAtTime(0.001, now);
+      clapGain.gain.linearRampToValueAtTime(0.035 * intensity, now + 0.04);
+      clapGain.gain.exponentialRampToValueAtTime(0.0005, now + 0.35);
+
+      clapOsc.connect(clapFilter);
+      clapFilter.connect(clapGain);
+      clapGain.connect(this.masterGain);
+
+      clapOsc.start(now + 0.02);
+      clapOsc.stop(now + 0.38);
+
+      // =========================================================================
+      // 3. ROLLING ATMOSPHERIC THUNDER RUMBLE (Deep, resonant rolling decay)
+      // =========================================================================
       const rumbleOsc = this.ctx.createOscillator();
       const rumbleGain = this.ctx.createGain();
       const rumbleFilter = this.ctx.createBiquadFilter();
 
       rumbleOsc.type = 'sine';
-      rumbleOsc.frequency.setValueAtTime(55, now);
-      rumbleOsc.frequency.exponentialRampToValueAtTime(18, now + 2.8);
+      rumbleOsc.frequency.setValueAtTime(75, now + 0.08);
+      rumbleOsc.frequency.exponentialRampToValueAtTime(32, now + 2.8);
 
       rumbleFilter.type = 'lowpass';
-      rumbleFilter.frequency.setValueAtTime(95, now);
+      rumbleFilter.frequency.setValueAtTime(110, now + 0.08);
+      rumbleFilter.Q.setValueAtTime(0.5, now + 0.08);
 
-      rumbleGain.gain.setValueAtTime(0.005, now);
-      rumbleGain.gain.linearRampToValueAtTime(0.08, now + 0.35);
-      rumbleGain.gain.exponentialRampToValueAtTime(0.0005, now + 3.0);
+      rumbleGain.gain.setValueAtTime(0.001, now);
+      rumbleGain.gain.linearRampToValueAtTime(0.038 * intensity, now + 0.28);
+      rumbleGain.gain.exponentialRampToValueAtTime(0.0003, now + 3.2);
 
       rumbleOsc.connect(rumbleFilter);
       rumbleFilter.connect(rumbleGain);
       rumbleGain.connect(this.masterGain);
 
-      rumbleOsc.start(now);
-      rumbleOsc.stop(now + 3.1);
+      rumbleOsc.start(now + 0.08);
+      rumbleOsc.stop(now + 3.3);
     } catch (e) {
-      console.warn('Thunder trigger skipped:', e);
+      console.warn('Lightning audio trigger skipped:', e);
     }
   }
 
-  // Direct Audio Test Button to demonstrate procedural sound cleanly and softly
+  // Alias for backward compatibility
+  public triggerThunder() {
+    this.triggerLightning(1.0);
+  }
+
+  // Direct Audio Test Demo Button
   public testAudio() {
     this.unlock();
-    if (!this.ctx) return;
-    try {
-      const now = this.ctx.currentTime;
-      // Play a soft, pleasant harmonic chime arpeggio
-      const tones = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-      tones.forEach((freq, idx) => {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-
-        gain.gain.setValueAtTime(0, now + idx * 0.08);
-        gain.gain.linearRampToValueAtTime(0.035, now + idx * 0.08 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0005, now + idx * 0.08 + 0.22);
-
-        osc.connect(gain);
-        if (this.masterGain) gain.connect(this.masterGain);
-        else gain.connect(this.ctx.destination);
-
-        osc.start(now + idx * 0.08);
-        osc.stop(now + idx * 0.08 + 0.25);
-      });
-
-      // Subtle thunder rumble preview after chime
-      setTimeout(() => {
-        this.triggerThunder();
-      }, 400);
-    } catch (e) {
-      console.warn('Audio test failed:', e);
-    }
+    this.triggerLightning(1.1);
   }
 
   public setWeatherState(
@@ -360,39 +368,27 @@ class AmbientAudioEngine {
   }
 
   private applyWeatherParameters() {
-    if (!this.ctx || !this.rainGain || !this.windGain || !this.breezeGain) return;
+    if (!this.ctx || !this.rainGain || !this.windGain) return;
 
     const t = this.ctx.currentTime;
-    const windTarget = Math.min(0.08, Math.max(0.02, (this.windVelocityKmh / 100) * 0.08));
+    const windTarget = Math.min(0.02, Math.max(0.004, (this.windVelocityKmh / 100) * 0.02));
 
     if (this.condition === 'STORM') {
-      const rainTarget = Math.max(0.06, Math.min(0.12, this.rainIntensity * 0.12));
+      const rainTarget = Math.max(0.03, Math.min(0.055, this.rainIntensity * 0.055));
       this.rainGain.gain.linearRampToValueAtTime(rainTarget, t + 0.5);
-      this.windGain.gain.linearRampToValueAtTime(Math.max(0.05, windTarget * 1.2), t + 0.5);
-      this.breezeGain.gain.linearRampToValueAtTime(0.01, t + 0.5);
-      if (this.rainFilter) this.rainFilter.frequency.linearRampToValueAtTime(2000, t + 0.5);
-      if (this.windFilter) this.windFilter.frequency.linearRampToValueAtTime(320, t + 0.5);
+      this.windGain.gain.linearRampToValueAtTime(windTarget * 1.2, t + 0.5);
+      if (this.rainFilter) this.rainFilter.frequency.linearRampToValueAtTime(2800, t + 0.5);
       this.scheduleThunder();
     } else if (this.condition === 'RAIN') {
-      const rainTarget = Math.max(0.04, Math.min(0.08, this.rainIntensity * 0.08));
+      const rainTarget = Math.max(0.015, Math.min(0.035, this.rainIntensity * 0.035));
       this.rainGain.gain.linearRampToValueAtTime(rainTarget, t + 0.5);
       this.windGain.gain.linearRampToValueAtTime(windTarget, t + 0.5);
-      this.breezeGain.gain.linearRampToValueAtTime(0.01, t + 0.5);
-      if (this.rainFilter) this.rainFilter.frequency.linearRampToValueAtTime(1600, t + 0.5);
-      if (this.windFilter) this.windFilter.frequency.linearRampToValueAtTime(250, t + 0.5);
-      if (this.thunderTimer) clearTimeout(this.thunderTimer);
-    } else if (this.condition === 'CLOUDY' || this.condition === 'MIST' || this.condition === 'HAZE') {
-      this.rainGain.gain.linearRampToValueAtTime(0.0, t + 0.5);
-      this.windGain.gain.linearRampToValueAtTime(windTarget * 0.6, t + 0.5);
-      this.breezeGain.gain.linearRampToValueAtTime(0.02, t + 0.5);
-      if (this.windFilter) this.windFilter.frequency.linearRampToValueAtTime(200, t + 0.5);
+      if (this.rainFilter) this.rainFilter.frequency.linearRampToValueAtTime(2200, t + 0.5);
       if (this.thunderTimer) clearTimeout(this.thunderTimer);
     } else {
-      // CLEAR / SUNNY
+      // CLEAR / CLOUDY / MIST / HAZE
       this.rainGain.gain.linearRampToValueAtTime(0.0, t + 0.5);
-      this.windGain.gain.linearRampToValueAtTime(0.02, t + 0.5);
-      this.breezeGain.gain.linearRampToValueAtTime(0.025, t + 0.5);
-      if (this.windFilter) this.windFilter.frequency.linearRampToValueAtTime(180, t + 0.5);
+      this.windGain.gain.linearRampToValueAtTime(0.005, t + 0.5);
       if (this.thunderTimer) clearTimeout(this.thunderTimer);
     }
   }
@@ -473,3 +469,4 @@ class AmbientAudioEngine {
 }
 
 export const ambientAudio = new AmbientAudioEngine();
+

@@ -588,22 +588,22 @@ export const Header: React.FC<HeaderProps> = ({
                   <button
                     onClick={() => {
                       ambientAudio.unmute();
-                      ambientAudio.triggerThunder();
+                      ambientAudio.triggerLightning(1.2);
                     }}
-                    className="py-1.5 px-2 rounded-lg border border-rose-500/30 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 text-[10px] font-semibold flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                    className="py-1.5 px-2 rounded-lg border border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 text-[10px] font-semibold flex items-center justify-center space-x-1 transition-all cursor-pointer"
                   >
-                    <Zap className="w-3 h-3 text-rose-400" />
-                    <span>⚡ Test Thunder</span>
+                    <Zap className="w-3 h-3 text-amber-400" />
+                    <span>⚡ Test Lightning</span>
                   </button>
                   <button
                     onClick={() => {
                       ambientAudio.unmute();
-                      ambientAudio.testAudio();
+                      ambientAudio.setWeatherState('RAIN', 24, 0.9);
                     }}
                     className="py-1.5 px-2 rounded-lg border border-sky-500/30 bg-sky-950/30 hover:bg-sky-900/40 text-sky-300 text-[10px] font-semibold flex items-center justify-center space-x-1 transition-all cursor-pointer"
                   >
                     <Sparkles className="w-3 h-3 text-sky-400" />
-                    <span>🎵 Test Chime</span>
+                    <span>🌧️ Natural Rain</span>
                   </button>
                 </div>
               </div>
