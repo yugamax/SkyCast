@@ -102,7 +102,7 @@ export const DisasterManagementView: React.FC<DisasterManagementViewProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
         {/* Left: GIS Map with Severe Cloudburst & Downburst Corridors (7 cols) */}
         <div className="xl:col-span-7 space-y-2.5">
-          <div className="h-[580px] w-full rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08]">
+          <div className="h-[340px] sm:h-[460px] lg:h-[580px] w-full rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08]">
             <WeatherMap
               stormCells={stormCells}
               radarStations={radarStations}

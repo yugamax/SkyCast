@@ -95,7 +95,7 @@ export const AviationView: React.FC<AviationViewProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
         {/* Left: GIS Map with Airports (7 cols) */}
         <div className="xl:col-span-7 space-y-2.5">
-          <div className="h-[580px] w-full rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08]">
+          <div className="h-[340px] sm:h-[460px] lg:h-[580px] w-full rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08]">
             <WeatherMap
               stormCells={stormCells}
               radarStations={radarStations}
@@ -128,7 +128,7 @@ export const AviationView: React.FC<AviationViewProps> = ({
               <span className="text-[10px] font-bold text-emerald-400 font-mono">{airports.length} Monitored</span>
             </h3>
 
-            <div className="space-y-2 max-h-[510px] overflow-y-auto pr-1 scrollbar-thin">
+            <div className="space-y-2 max-h-[360px] sm:max-h-[510px] overflow-y-auto pr-1 scrollbar-thin">
               {airports.map((apt) => {
                 const isCritical = apt.convectiveThreat === 'CRITICAL';
                 const isSevere = apt.convectiveThreat === 'SEVERE';

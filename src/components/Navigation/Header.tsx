@@ -18,7 +18,9 @@ import {
   CloudLightning,
   Wind,
   CheckCircle2,
-  Volume1
+  Volume1,
+  Menu,
+  X
 } from 'lucide-react';
 import { 
   simulationEngine, 
@@ -43,6 +45,7 @@ interface HeaderProps {
   onReplayIntro?: () => void;
   onOpenInfo?: (infoId: string) => void;
   unreadAlertCount: number;
+  onToggleMobileMenu?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -53,7 +56,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   onOpenApiKeys,
   onOpenAlertsDrawer,
-  unreadAlertCount
+  unreadAlertCount,
+  onToggleMobileMenu
 }) => {
   const { theme } = useTheme();
   const isLight = false;
@@ -67,6 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [isAudioPopoverOpen, setIsAudioPopoverOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState<boolean>(false);
 
   const scenarioMenuRef = useRef<HTMLDivElement>(null);
   const audioPopoverRef = useRef<HTMLDivElement>(null);
@@ -109,13 +114,14 @@ export const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Keyboard shortcut listener (Cmd+K / Ctrl+K)
+  // Keyboard shortcut (Cmd+K or Ctrl+K) for search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         const input = document.getElementById('global-search-input');
         if (input) input.focus();
+        else setIsMobileSearchOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -174,7 +180,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header 
-      className={`h-12 px-3 sm:px-4 border-b flex items-center justify-between z-50 select-none transition-all duration-200 gap-3 ios-glass-header ${
+      className={`h-12 px-2.5 sm:px-4 border-b flex items-center justify-between z-50 select-none transition-all duration-200 gap-2 sm:gap-3 ios-glass-header ${
         isLight 
           ? 'bg-white/85 border-slate-200 shadow-sm' 
           : 'bg-[#0B0C0E]/85 border-white/[0.08] shadow-md'
@@ -185,10 +191,22 @@ export const Header: React.FC<HeaderProps> = ({
       }}
     >
       {/* =========================================================================
-          ZONE 1 (LEFT): Refined Geometric Minimalist Brand Emblem + View Label
+          ZONE 1 (LEFT): Mobile Hamburger + Brand Emblem + Mode Label
           ========================================================================= */}
-      <div className="flex items-center space-x-3 shrink-0">
-        <div className="flex items-center space-x-2 group cursor-pointer">
+      <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+        {/* Mobile Hamburger Toggle Button (< md) */}
+        {onToggleMobileMenu && (
+          <button
+            onClick={onToggleMobileMenu}
+            className="md:hidden p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+            title="Open Navigation Menu"
+            aria-label="Toggle Navigation Menu"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
+
+        <div className="flex items-center space-x-1.5 sm:space-x-2 group cursor-pointer">
           <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.1] flex items-center justify-center text-zinc-100 shadow-xs group-hover:border-emerald-500/40 transition-colors">
             <svg 
               viewBox="0 0 24 24" 
@@ -207,7 +225,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div className="flex flex-col">
             <span 
-              className={`font-mono text-[13px] font-medium tracking-[0.18em] uppercase ${
+              className={`font-mono text-xs sm:text-[13px] font-medium tracking-[0.18em] uppercase ${
                 isLight ? 'text-slate-900' : 'text-zinc-100'
               }`}
             >
@@ -216,15 +234,15 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        <span className="text-zinc-700 text-xs font-light">/</span>
+        <span className="text-zinc-700 text-xs font-light hidden sm:inline">/</span>
 
-        <span className="text-[11px] font-mono text-zinc-400 font-medium truncate max-w-[100px] sm:max-w-none">
+        <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 font-medium truncate max-w-[80px] sm:max-w-none">
           {modeLabels[operationalMode]}
         </span>
       </div>
 
       {/* =========================================================================
-          ZONE 2 (CENTER): Operational Mode Track + Minimalist Search Bar
+          ZONE 2 (CENTER): Operational Mode Track + Minimalist Search Bar (Desktop)
           ========================================================================= */}
       <div className="hidden md:flex items-center space-x-2.5 flex-1 max-w-xl justify-center">
         {/* Segmented Operational Mode Track */}
@@ -335,28 +353,46 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* =========================================================================
-          ZONE 3 (RIGHT): Weather Scenario Selector + Audio Synthesizer + System Controls
+          ZONE 3 (RIGHT): Weather Scenario + Audio + Mobile Search + Tools
           ========================================================================= */}
-      <div className="flex items-center space-x-2 shrink-0">
+      <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
         
-        {/* =========================================================================
-            PROMINENT WEATHER SCENARIO SELECTOR (FOR JUDGE DEMONSTRATIONS)
-            ========================================================================= */}
+        {/* Mobile Search Button (< md) */}
+        <button
+          onClick={() => setIsMobileSearchOpen(true)}
+          className="md:hidden w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer"
+          title="Search City or Radar"
+        >
+          <Search className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Mobile GPS Quick Locate (< md) */}
+        {onLocateUser && (
+          <button
+            onClick={onLocateUser}
+            className="md:hidden w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-sky-500/30 bg-sky-500/10 flex items-center justify-center text-sky-400 cursor-pointer"
+            title="Locate GPS"
+          >
+            <LocateFixed className="w-3.5 h-3.5" />
+          </button>
+        )}
+
+        {/* PROMINENT WEATHER SCENARIO SELECTOR */}
         <div className="relative" ref={scenarioMenuRef}>
           <button
             onClick={() => {
               setIsScenarioMenuOpen(!isScenarioMenuOpen);
               setIsAudioPopoverOpen(false);
             }}
-            className={`h-8 px-2.5 rounded-lg border flex items-center space-x-1.5 transition-all cursor-pointer shadow-xs ${
+            className={`h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg border flex items-center space-x-1 sm:space-x-1.5 transition-all cursor-pointer shadow-xs ${
               isLight 
                 ? 'bg-emerald-50 border-emerald-300 text-emerald-950 hover:bg-emerald-100' 
                 : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 hover:border-emerald-500/50'
             }`}
             title="Switch Weather Scenario (Simulation Presets for Judges)"
           >
-            <span className="text-sm">{currentScenario.icon}</span>
-            <span className="text-[11px] font-semibold tracking-tight hidden sm:inline max-w-[110px] md:max-w-[130px] truncate">
+            <span className="text-xs sm:text-sm">{currentScenario.icon}</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold tracking-tight hidden sm:inline max-w-[90px] md:max-w-[130px] truncate">
               {currentScenario.name.split('&')[0].trim()}
             </span>
             <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 hidden lg:inline">
@@ -365,10 +401,10 @@ export const Header: React.FC<HeaderProps> = ({
             <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isScenarioMenuOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Scenario Selection Popover */}
+          {/* Scenario Selection Popover (Mobile Responsive) */}
           {isScenarioMenuOpen && (
             <div 
-              className={`absolute top-10 right-0 w-80 sm:w-96 rounded-2xl p-2.5 z-50 border shadow-2xl backdrop-blur-3xl animate-in fade-in slide-in-from-top-2 duration-150 ${
+              className={`fixed inset-x-3 top-13 sm:absolute sm:top-10 sm:right-0 sm:left-auto sm:w-96 rounded-2xl p-2.5 z-50 border shadow-2xl backdrop-blur-3xl animate-in fade-in slide-in-from-top-2 duration-150 max-w-[calc(100vw-24px)] ${
                 isLight 
                   ? 'bg-white/95 border-slate-200 text-slate-800' 
                   : 'bg-[#121316]/95 border-white/[0.12] text-zinc-100'
@@ -387,14 +423,14 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-[10px] font-mono text-zinc-500">6 Presets</span>
               </div>
 
-              <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-0.5">
+              <div className="space-y-1.5 max-h-[50vh] sm:max-h-[360px] overflow-y-auto pr-0.5">
                 {scenariosList.map((sc) => {
                   const isSelected = currentScenario.id === sc.id;
                   return (
                     <button
                       key={sc.id}
                       onClick={() => handleSelectScenario(sc.id)}
-                      className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-start space-x-3 cursor-pointer ${
+                      className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-start space-x-2.5 sm:space-x-3 cursor-pointer ${
                         isSelected
                           ? isLight
                             ? 'bg-emerald-50 border-emerald-400 shadow-xs'
@@ -404,13 +440,13 @@ export const Header: React.FC<HeaderProps> = ({
                           : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.15]'
                       }`}
                     >
-                      <div className="text-2xl pt-0.5 shrink-0">{sc.icon}</div>
+                      <div className="text-xl sm:text-2xl pt-0.5 shrink-0">{sc.icon}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <span className={`text-xs font-semibold truncate ${isSelected ? 'text-emerald-400' : ''}`}>
                             {sc.name}
                           </span>
-                          <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded shrink-0 ml-1.5 ${
+                          <span className={`text-[9px] sm:text-[10px] font-mono font-bold px-1.5 py-0.2 rounded shrink-0 ml-1.5 ${
                             sc.condition === 'STORM' 
                               ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' 
                               : sc.condition === 'RAIN'
@@ -427,8 +463,6 @@ export const Header: React.FC<HeaderProps> = ({
                           <span>Clouds: {sc.cloudCover}%</span>
                           <span>•</span>
                           <span>Wind: {sc.windSpeed} km/h</span>
-                          <span>•</span>
-                          <span>Humidity: {sc.humidity}%</span>
                         </div>
                       </div>
                       {isSelected && (
@@ -440,7 +474,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="mt-2 pt-2 border-t border-white/[0.08] flex items-center justify-between text-[10px] text-zinc-400 px-1 font-mono">
-                <span>⚡ Procedural Audio & Graphics Synced</span>
+                <span>⚡ Procedural Audio & Physics Synced</span>
                 <button
                   onClick={() => setIsScenarioMenuOpen(false)}
                   className="text-zinc-500 hover:text-zinc-300 cursor-pointer"
@@ -452,9 +486,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* =========================================================================
-            PROCEDURAL AMBIENT SOUND MASTER CONTROLLER POPOVER
-            ========================================================================= */}
+        {/* PROCEDURAL AMBIENT SOUND MASTER CONTROLLER */}
         <div className="relative" ref={audioPopoverRef}>
           <button
             onClick={() => {
@@ -462,12 +494,12 @@ export const Header: React.FC<HeaderProps> = ({
               setIsScenarioMenuOpen(false);
               ambientAudio.unlock();
             }}
-            className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
               !isAudioMuted
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-xs'
                 : 'bg-white/[0.03] border-white/[0.08] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.06]'
             }`}
-            title="Ambient Weather Sound Synthesizer (Click for Controls & Test Sound)"
+            title="Ambient Weather Sound Synthesizer"
           >
             {!isAudioMuted ? (
               <div className="flex items-end space-x-0.5 h-3.5 w-3.5 py-0.5">
@@ -480,10 +512,10 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Sound Controls Popover */}
+          {/* Sound Controls Popover (Mobile Responsive) */}
           {isAudioPopoverOpen && (
             <div 
-              className={`absolute top-10 right-0 w-72 rounded-2xl p-3.5 z-50 border shadow-2xl backdrop-blur-3xl animate-in fade-in slide-in-from-top-2 duration-150 ${
+              className={`fixed inset-x-3 top-13 sm:absolute sm:top-10 sm:right-0 sm:left-auto sm:w-72 rounded-2xl p-3.5 z-50 border shadow-2xl backdrop-blur-3xl animate-in fade-in slide-in-from-top-2 duration-150 max-w-[calc(100vw-24px)] ${
                 isLight 
                   ? 'bg-white/95 border-slate-200 text-slate-800' 
                   : 'bg-[#121316]/95 border-white/[0.12] text-zinc-100'
@@ -492,7 +524,6 @@ export const Header: React.FC<HeaderProps> = ({
                 boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1)'
               }}
             >
-              {/* Header */}
               <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
                 <div className="flex items-center space-x-1.5">
                   <Volume2 className="w-4 h-4 text-emerald-400" />
@@ -505,7 +536,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
 
-              {/* Master Mute / Unmute Button */}
               <div className="mt-3">
                 <button
                   onClick={handleToggleAudio}
@@ -529,7 +559,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
 
-              {/* Volume Slider */}
               <div className="mt-3 space-y-1">
                 <div className="flex justify-between text-[11px]">
                   <span className="text-zinc-400 flex items-center space-x-1">
@@ -551,7 +580,6 @@ export const Header: React.FC<HeaderProps> = ({
                 />
               </div>
 
-              {/* Quick Audition & Test Buttons */}
               <div className="mt-3.5 pt-3 border-t border-white/[0.08] space-y-1.5">
                 <div className="text-[10px] font-mono text-zinc-400 font-semibold mb-1">
                   Instant Synthesizer Audition:
@@ -563,7 +591,6 @@ export const Header: React.FC<HeaderProps> = ({
                       ambientAudio.triggerThunder();
                     }}
                     className="py-1.5 px-2 rounded-lg border border-rose-500/30 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 text-[10px] font-semibold flex items-center justify-center space-x-1 transition-all cursor-pointer"
-                    title="Synthesize a dynamic lightning crack and rolling sub rumble"
                   >
                     <Zap className="w-3 h-3 text-rose-400" />
                     <span>⚡ Test Thunder</span>
@@ -574,33 +601,27 @@ export const Header: React.FC<HeaderProps> = ({
                       ambientAudio.testAudio();
                     }}
                     className="py-1.5 px-2 rounded-lg border border-sky-500/30 bg-sky-950/30 hover:bg-sky-900/40 text-sky-300 text-[10px] font-semibold flex items-center justify-center space-x-1 transition-all cursor-pointer"
-                    title="Play a 4-tone harmonic chime test"
                   >
                     <Sparkles className="w-3 h-3 text-sky-400" />
                     <span>🎵 Test Chime</span>
                   </button>
                 </div>
               </div>
-
-              {/* Description */}
-              <p className="text-[9px] text-zinc-500 mt-2.5 leading-relaxed">
-                100% procedural Web Audio API synthesis with zero external audio assets. Synced to active storm cells and wind velocity.
-              </p>
             </div>
           )}
         </div>
 
-        {/* Tabular Time Indicator */}
+        {/* Tabular Time Indicator (Desktop Large) */}
         <div className="hidden 2xl:flex items-center space-x-1.5 font-mono text-[11px] text-zinc-400 bg-white/[0.03] px-2.5 py-1 rounded-lg border border-white/[0.06]">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
           <span className="text-zinc-200 font-medium">{istTimeStr}</span>
           <span className="text-zinc-600 text-[9px]">IST</span>
         </div>
 
-        {/* Sim/Live Switch (Icon-Only + Micro Status Dot) */}
+        {/* Sim/Live Switch */}
         <button
           onClick={handleToggleDemo}
-          className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
             isDemo
               ? 'bg-white/[0.04] text-zinc-400 border-white/[0.08]'
               : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
@@ -610,19 +631,19 @@ export const Header: React.FC<HeaderProps> = ({
           <Activity className="w-3.5 h-3.5" />
         </button>
 
-        {/* API Keys Icon-Only */}
+        {/* API Keys */}
         <button
           onClick={onOpenApiKeys}
-          className="w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
           title="API Keys & Data Pipelines"
         >
           <Key className="w-3.5 h-3.5" />
         </button>
 
-        {/* Alerts Bell Icon-Only */}
+        {/* Alerts Bell */}
         <button
           onClick={onOpenAlertsDrawer}
-          className="relative w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+          className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
           title="Active Hazard Warnings"
         >
           <Bell className="w-3.5 h-3.5" />
@@ -633,15 +654,72 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
 
-        {/* Settings Icon-Only */}
+        {/* Settings */}
         <button
           onClick={onOpenSettings}
-          className="w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer hidden sm:flex"
           title="Threshold Settings"
         >
           <Sliders className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      {/* =========================================================================
+          MOBILE SEARCH MODAL OVERLAY (< md)
+          ========================================================================= */}
+      {isMobileSearchOpen && (
+        <div className="fixed inset-0 z-50 p-4 bg-black/80 backdrop-blur-xl flex flex-col md:hidden animate-in fade-in duration-150">
+          <div className="flex items-center justify-between pb-3 border-b border-white/[0.1]">
+            <div className="flex items-center space-x-2 flex-1 mr-2">
+              <Search className="w-4 h-4 text-emerald-400 shrink-0" />
+              <input
+                type="text"
+                autoFocus
+                placeholder="Search city, radar station..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none w-full font-sans"
+              />
+            </div>
+            <button
+              onClick={() => {
+                setIsMobileSearchOpen(false);
+                setSearchQuery('');
+              }}
+              className="p-1 rounded-lg text-zinc-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="mt-3 space-y-1 overflow-y-auto flex-1">
+            {filteredCities.length > 0 ? (
+              filteredCities.map((city) => (
+                <button
+                  key={city.name}
+                  onClick={() => {
+                    onSearchSelectLocation(city.lat, city.lng, 9, city.name);
+                    setSearchQuery('');
+                    setIsMobileSearchOpen(false);
+                  }}
+                  className="w-full text-left p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] flex items-center justify-between transition-colors"
+                >
+                  <span className="font-semibold text-white text-sm">{city.name}</span>
+                  <span className="text-xs font-mono text-emerald-400">{city.state}</span>
+                </button>
+              ))
+            ) : searchQuery.trim() !== '' ? (
+              <div className="p-4 text-center text-xs text-zinc-500 font-mono">
+                No matching cities or radar stations found.
+              </div>
+            ) : (
+              <div className="p-4 text-center text-xs text-zinc-500 font-mono">
+                Type a city name (e.g. New Delhi, Mumbai, Kolkata, Bengaluru)
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };

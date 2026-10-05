@@ -30,34 +30,34 @@ export const HistoricalView: React.FC<HistoricalViewProps> = ({ onOpenInfo }) =>
   return (
     <div className="p-2.5 sm:p-3 space-y-3 max-w-[1920px] mx-auto select-none font-mono text-xs bg-transparent text-zinc-100 min-h-full">
       {/* Top Banner with Verification Badge */}
-      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-wrap items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-zinc-300">
+      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="p-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-zinc-300 shrink-0">
             <History className="w-5 h-5" />
           </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white truncate">
                 Model Verification & Historical Post-Event Evaluation
               </h2>
-              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
                 VERIFICATION BENCHMARK
               </span>
               {onOpenInfo && <InfoButton infoId="AI_CONVLSTM" onOpenInfo={onOpenInfo} size="xs" />}
             </div>
-            <p className="text-[11px] mt-0.5 text-zinc-400">
+            <p className="text-[11px] mt-0.5 text-zinc-400 truncate">
               Quantitative verification scorecards (POD, FAR, CSI, ETS, RMSE) on 14,200 convective test cases
             </p>
           </div>
         </div>
 
         {/* Lead time switcher */}
-        <div className="flex items-center rounded-xl p-1 space-x-1 border border-white/[0.08] bg-[#121316]/90">
+        <div className="flex items-center rounded-xl p-1 space-x-1 border border-white/[0.08] bg-[#121316]/90 overflow-x-auto scrollbar-none max-w-full shrink-0">
           {VERIFICATION_METRICS.map((m) => (
             <button
               key={m.leadTime}
               onClick={() => setSelectedLeadTime(m.leadTime)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 selectedLeadTime === m.leadTime
                   ? 'bg-emerald-400 text-zinc-950 font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'

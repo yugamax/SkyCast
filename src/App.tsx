@@ -50,6 +50,7 @@ export function App() {
   const [activeView, setActiveView] = useState<ActiveView>('COMMAND_CENTER');
   const [operationalMode, setOperationalMode] = useState<OperationalMode>('STANDARD');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
   const [showCloudIntro, setShowCloudIntro] = useState<boolean>(true);
 
   // Real-time Live Weather Telemetry & Simulation States
@@ -232,7 +233,7 @@ export function App() {
   const unacknowledgedAlertCount = alerts.filter(a => !a.acknowledged).length;
 
   return (
-    <div className={`h-screen w-screen flex flex-col antialiased transition-colors duration-200 relative overflow-hidden ${
+    <div className={`h-[100dvh] w-screen flex flex-col antialiased transition-colors duration-200 relative overflow-hidden ${
       isLight ? 'bg-slate-100 text-slate-900' : 'bg-[#0B0C0E] text-zinc-100'
     }`}>
       {/* Dynamic Full-Viewport Atmospheric Background Physics Engine */}
@@ -265,11 +266,12 @@ export function App() {
         onReplayIntro={() => setShowCloudIntro(true)}
         onOpenInfo={(infoId) => setActiveInfoId(infoId)}
         unreadAlertCount={unacknowledgedAlertCount}
+        onToggleMobileMenu={() => setIsMobileNavOpen(!isMobileNavOpen)}
       />
 
       {/* Main Workspace Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Nav Sidebar */}
+        {/* Left Nav Sidebar (Desktop + Mobile Drawer) */}
         <Sidebar
           activeView={activeView}
           onSelectView={(view) => {
@@ -281,6 +283,10 @@ export function App() {
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           activeAlertCount={unacknowledgedAlertCount}
+          isMobileOpen={isMobileNavOpen}
+          onCloseMobile={() => setIsMobileNavOpen(false)}
+          operationalMode={operationalMode}
+          onSelectOperationalMode={(mode) => setOperationalMode(mode)}
         />
 
         {/* View Routing Center Panel */}

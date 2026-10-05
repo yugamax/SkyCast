@@ -32,27 +32,27 @@ export const DataSourcesView: React.FC<DataSourcesViewProps> = ({
   return (
     <div className="p-2.5 sm:p-3 space-y-3 max-w-[1920px] mx-auto select-none font-mono text-xs bg-transparent text-zinc-100 min-h-full">
       {/* Top Banner */}
-      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-wrap items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
             <Database className="w-5 h-5 animate-pulse" />
           </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white truncate">
                 Multi-Sensor Ingestion Pipeline & Telemetry Status
               </h2>
-              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                 5 INGESTION FEEDS ONLINE
               </span>
             </div>
-            <p className="text-[11px] mt-0.5 text-zinc-400">
+            <p className="text-[11px] mt-0.5 text-zinc-400 truncate">
               National radar, satellite, lightning, surface AWS, and numerical weather prediction pipelines
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 shrink-0">
           {onOpenApiKeys && (
             <button
               onClick={onOpenApiKeys}

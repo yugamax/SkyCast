@@ -157,9 +157,9 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   return (
     <div className="min-h-full flex flex-col justify-between p-2.5 sm:p-3 gap-2.5 max-w-[1920px] mx-auto select-none font-sans text-zinc-100 bg-transparent">
       
-      {/* 1. TOP STRIP: Slim, Single-Line Threat Alert Banner */}
+      {/* 1. TOP STRIP: Slim Threat Alert Banner */}
       <div 
-        className={`w-full px-3 py-1.5 rounded-xl ios-glass-card flex items-center justify-between gap-2 shrink-0 text-xs font-mono border border-white/[0.08] ${
+        className={`w-full px-2.5 sm:px-3 py-1.5 rounded-xl ios-glass-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 sm:gap-2 shrink-0 text-xs font-mono border border-white/[0.08] ${
           mostSevereCell?.severity === 'CRITICAL'
             ? isLight
               ? 'bg-rose-50/90 border-rose-300 text-rose-950'
@@ -170,7 +170,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         }`}
       >
         {/* Left: Alert Tag & Kinematics */}
-        <div className="flex items-center space-x-2 min-w-0 flex-1 truncate">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0 flex-1 truncate w-full sm:w-auto">
           <div className={`p-1 rounded-md flex items-center justify-center shrink-0 ${
             mostSevereCell?.severity === 'CRITICAL'
               ? 'bg-rose-500/20 text-rose-400'
@@ -188,7 +188,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </span>
 
           {mostSevereCell ? (
-            <div className="flex items-center space-x-1.5 truncate text-[11px] min-w-0">
+            <div className="flex items-center space-x-1.5 truncate text-[11px] min-w-0 flex-1">
               <span className="font-semibold text-white truncate">
                 Target: <b className="text-rose-400">{mostSevereCell.targetLocation}</b>
               </span>
@@ -209,7 +209,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         </div>
 
         {/* Right: ETA & Quick Action Button */}
-        <div className="flex items-center space-x-2 shrink-0">
+        <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-white/[0.04]">
           {mostSevereCell && (
             <div className="flex items-center space-x-1 px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 font-bold text-[10px]">
               <Clock className="w-3 h-3 text-rose-400" />
@@ -217,23 +217,25 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             </div>
           )}
 
-          {mostSevereCell && (
-            <button
-              onClick={() => onSelectCell(mostSevereCell)}
-              className="px-2 py-0.5 rounded-md bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-zinc-300 hover:text-white text-[10px] font-medium transition-all hidden sm:inline-block cursor-pointer"
-            >
-              Focus
-            </button>
-          )}
+          <div className="flex items-center space-x-1.5">
+            {mostSevereCell && (
+              <button
+                onClick={() => onSelectCell(mostSevereCell)}
+                className="px-2 py-0.5 rounded-md bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-zinc-300 hover:text-white text-[10px] font-medium transition-all cursor-pointer"
+              >
+                Focus
+              </button>
+            )}
 
-          {userLocation && onToggleFilterScope && (
-            <button
-              onClick={() => onToggleFilterScope(isLocalActive ? 'ALL_INDIA' : 'LOCAL')}
-              className="px-2 py-0.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-[10px] font-medium text-zinc-300 transition-all cursor-pointer"
-            >
-              {isLocalActive ? 'All India' : `Sector (${userLocation.city || 'Local'})`}
-            </button>
-          )}
+            {userLocation && onToggleFilterScope && (
+              <button
+                onClick={() => onToggleFilterScope(isLocalActive ? 'ALL_INDIA' : 'LOCAL')}
+                className="px-2 py-0.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-[10px] font-medium text-zinc-300 transition-all cursor-pointer"
+              >
+                {isLocalActive ? 'All India' : `Sector (${userLocation.city || 'Local'})`}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -241,7 +243,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-2.5 items-stretch">
         
         {/* LEFT COLUMN (50%–55% desktop width): Prominent Balanced Map Viewport */}
-        <div className="lg:col-span-7 xl:col-span-6 min-h-[380px] lg:min-h-[440px] h-[400px] lg:h-full rounded-2xl overflow-hidden relative border border-white/[0.08]">
+        <div className="lg:col-span-7 xl:col-span-6 min-h-[290px] sm:min-h-[380px] lg:min-h-[440px] h-[330px] sm:h-[400px] lg:h-full rounded-2xl overflow-hidden relative border border-white/[0.08]">
           <WeatherMap
             stormCells={stormCells}
             radarStations={radarStations}
@@ -306,10 +308,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline space-x-1">
-                  <span className="text-4xl sm:text-5xl font-black font-mono tracking-tighter text-white">
+                  <span className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tighter text-white">
                     <AnimatedCounter value={currentTemp} />°
                   </span>
-                  <span className="text-lg font-mono font-bold text-emerald-400">C</span>
+                  <span className="text-base sm:text-lg font-mono font-bold text-emerald-400">C</span>
                 </div>
                 
                 <p className="text-xs font-medium text-zinc-300 mt-0.5 leading-relaxed line-clamp-2">
@@ -320,7 +322,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
               {/* Thermal Breakdown Micro-Tile */}
               <div className="text-right font-mono text-xs space-y-0.5 bg-white/[0.02] p-2 rounded-xl border border-white/[0.04] shrink-0">
                 <div className="text-[9px] text-zinc-500 uppercase tracking-wider">Feels Like</div>
-                <div className="text-sm font-bold text-white">
+                <div className="text-xs sm:text-sm font-bold text-white">
                   <AnimatedCounter value={currentFeelsLike} />°C
                 </div>
                 <div className="text-[9px] text-zinc-500 pt-0.5 border-t border-white/[0.04]">

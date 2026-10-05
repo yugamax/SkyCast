@@ -145,25 +145,25 @@ export const AiArchitectureView: React.FC<AiArchitectureViewProps> = ({ onOpenIn
   return (
     <div className="p-2.5 sm:p-3 space-y-3 max-w-[1920px] mx-auto select-none font-mono text-xs bg-transparent text-zinc-100 min-h-full">
       {/* Top Architecture Header */}
-      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-wrap items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
             <BrainCircuit className="w-5 h-5 animate-pulse" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center space-x-2">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white truncate">
                 SKYCAST AI Pipeline & Deep Learning Architecture
               </h2>
               {onOpenInfo && <InfoButton infoId="AI_CONVLSTM" onOpenInfo={onOpenInfo} size="xs" />}
             </div>
-            <p className="text-[11px] mt-0.5 text-zinc-400">
+            <p className="text-[11px] mt-0.5 text-zinc-400 truncate">
               Multi-Source Data Ingestion &rarr; 4D Fusion &rarr; Spatiotemporal AI Backbone &rarr; 0–6h Hazard Forecast
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 text-[11px] px-3 py-2 rounded-xl border border-white/[0.08] bg-[#121316]/90">
+        <div className="flex items-center space-x-2 text-[11px] px-3 py-2 rounded-xl border border-white/[0.08] bg-[#121316]/90 shrink-0">
           <span className="text-zinc-400">GPU Cluster:</span>
           <span className="font-bold text-emerald-400 font-mono">NVIDIA A100 Tensor Core (Batch Latency: 14.2s)</span>
         </div>
@@ -262,7 +262,7 @@ export const AiArchitectureView: React.FC<AiArchitectureViewProps> = ({ onOpenIn
           <div className="space-y-2 text-[11px]">
             <div className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] space-y-1">
               <span className="text-zinc-400 text-[10px]">PyTorch Tensor Shape:</span>
-              <div className="text-amber-400 font-mono font-bold text-xs">{activeStage.tensorShape}</div>
+              <div className="text-amber-400 font-mono font-bold text-xs break-all">{activeStage.tensorShape}</div>
             </div>
 
             <div className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] space-y-1">

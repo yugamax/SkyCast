@@ -78,31 +78,31 @@ export const HazardsView: React.FC<HazardsViewProps> = ({
   return (
     <div className="p-2.5 sm:p-3 space-y-3 max-w-[1920px] mx-auto select-none font-mono text-xs bg-transparent text-zinc-100 min-h-full">
       {/* Top Hazard Summary Header */}
-      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-wrap items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400">
+      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 shrink-0">
             <AlertTriangle className="w-5 h-5 animate-pulse" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center space-x-2">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white truncate">
                 Convective Hazard Assessment & Impact Matrix
               </h2>
               {onOpenInfo && <InfoButton infoId={`HAZARD_${activeHazardTab}`} onOpenInfo={onOpenInfo} size="xs" />}
             </div>
-            <p className="text-[11px] mt-0.5 text-zinc-400">
+            <p className="text-[11px] mt-0.5 text-zinc-400 truncate">
               Multi-Hazard 1.5 km Risk Scoring & District Vulnerability Analysis
             </p>
           </div>
         </div>
 
         {/* Hazard Selector */}
-        <div className="flex items-center rounded-xl p-1 space-x-1 border border-white/[0.08] bg-[#121316]/90">
+        <div className="flex items-center rounded-xl p-1 space-x-1 border border-white/[0.08] bg-[#121316]/90 overflow-x-auto scrollbar-none max-w-full">
           {hazardTabs.map((h) => (
             <button
               key={h.id}
               onClick={() => setActiveHazardTab(h.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 activeHazardTab === h.id
                   ? 'bg-amber-400 text-zinc-950 shadow-sm font-semibold'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
@@ -118,7 +118,7 @@ export const HazardsView: React.FC<HazardsViewProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
         {/* Left: GIS Map with Selected Hazard Layer (8 cols) */}
         <div className="xl:col-span-8 space-y-2.5">
-          <div className="h-[580px] w-full rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08]">
+          <div className="h-[340px] sm:h-[460px] lg:h-[580px] w-full rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08]">
             <WeatherMap
               stormCells={stormCells}
               radarStations={radarStations}
@@ -158,12 +158,12 @@ export const HazardsView: React.FC<HazardsViewProps> = ({
                 <ShieldAlert className="w-4 h-4 text-rose-400" />
                 <span>Critical District Vulnerability</span>
               </h3>
-              <span className="text-rose-400 font-bold text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30">
+              <span className="text-rose-400 font-bold text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 shrink-0">
                 HIGH THREAT
               </span>
             </div>
 
-            <div className="space-y-2 text-[11px] max-h-[510px] overflow-y-auto pr-1 scrollbar-thin">
+            <div className="space-y-2 text-[11px] max-h-[360px] sm:max-h-[510px] overflow-y-auto pr-1 scrollbar-thin">
               {[
                 { district: 'Kolkata Urban (WB)', pop: '14.9M', score: 96, hazard: 'Cloudburst & 96 km/h Squall' },
                 { district: 'Kamrup Metro (Assam)', pop: '1.2M', score: 94, hazard: 'Flash Cloudburst & Deluge' },

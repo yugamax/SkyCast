@@ -25,27 +25,27 @@ export const SystemHealthView: React.FC<SystemHealthViewProps> = ({ onOpenInfo }
   return (
     <div className="p-2.5 sm:p-3 space-y-3 max-w-[1920px] mx-auto select-none font-mono text-xs bg-transparent text-zinc-100 min-h-full">
       {/* Top Banner */}
-      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-wrap items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+      <div className="p-3.5 rounded-2xl ios-glass-card flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xl backdrop-blur-xl border border-white/[0.08]">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
             <Activity className="w-5 h-5 animate-pulse" />
           </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white truncate">
                 SKYCAST Operational Infrastructure & System Health
               </h2>
-              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                 SYSTEM HEALTH: 99.98% OPTIMAL
               </span>
             </div>
-            <p className="text-[11px] mt-0.5 text-zinc-400">
+            <p className="text-[11px] mt-0.5 text-zinc-400 truncate">
               GPU inference cluster, WebSocket broker, Redis buffer, and failover health
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 text-[11px] px-3 py-2 rounded-xl border border-white/[0.08] bg-[#121316]/90">
+        <div className="flex items-center space-x-2 text-[11px] px-3 py-2 rounded-xl border border-white/[0.08] bg-[#121316]/90 shrink-0">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
           <span className="text-zinc-400">Cluster Status:</span>
           <span className="text-emerald-400 font-bold font-mono">4 Nodes Active</span>

@@ -125,15 +125,15 @@ export const RadarView: React.FC<RadarViewProps> = ({
 
         {/* Center: Dual-Pol Products Switcher */}
         <div 
-          className={`flex items-center rounded-xl p-0.5 sm:p-1 space-x-1 border ${
+          className={`flex items-center rounded-xl p-0.5 sm:p-1 space-x-1 border overflow-x-auto max-w-full scrollbar-none ${
             isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/[0.03] border-white/[0.06]'
           }`}
         >
           {radarProducts.map((prod) => (
-            <div key={prod.id} className="flex items-center">
+            <div key={prod.id} className="flex items-center shrink-0">
               <button
                 onClick={() => setSelectedProduct(prod.id as any)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   selectedProduct === prod.id
                     ? isLight
                       ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200'
@@ -150,7 +150,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
         </div>
 
         {/* Right: Elevation Angle Selector */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 shrink-0">
           <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Elevation:</span>
           <div 
             className={`flex items-center space-x-1 p-0.5 sm:p-1 rounded-xl border ${
@@ -182,7 +182,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
         {/* Left: GIS Map with Radar Range Rings & Dual-Pol Echoes (8 cols) */}
         <div className="xl:col-span-8 space-y-2.5">
-          <div className="h-[480px] lg:h-[540px] w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg">
+          <div className="h-[340px] sm:h-[460px] lg:h-[540px] w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg">
             <WeatherMap
               stormCells={stormCells}
               radarStations={radarStations}

@@ -137,7 +137,7 @@ export const LightningView: React.FC<LightningViewProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
         {/* Left: GIS Lightning Strike & Density Map (8 cols) */}
         <div className="xl:col-span-8 space-y-2.5">
-          <div className="h-[580px] w-full rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08]">
+          <div className="h-[340px] sm:h-[460px] lg:h-[580px] w-full rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08]">
             <WeatherMap
               stormCells={stormCells}
               radarStations={radarStations}
@@ -159,43 +159,43 @@ export const LightningView: React.FC<LightningViewProps> = ({
           </div>
 
           {/* Type Filter Controls */}
-          <div className="p-3 rounded-2xl ios-glass-card flex items-center justify-between shadow-sm">
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] uppercase font-bold text-zinc-400">Stroke Filter:</span>
+          <div className="p-3 rounded-2xl ios-glass-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-sm">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto max-w-full scrollbar-none">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 shrink-0">Stroke Filter:</span>
               <button
                 onClick={() => setStrikeFilter('ALL')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                   strikeFilter === 'ALL'
                     ? 'bg-emerald-400 text-zinc-950 font-semibold shadow-md'
                     : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12] border border-white/[0.08]'
                 }`}
               >
-                All Strikes ({lightningStrikes.length})
+                All ({lightningStrikes.length})
               </button>
               <button
                 onClick={() => setStrikeFilter('CG')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                   strikeFilter === 'CG'
                     ? 'bg-amber-400 text-zinc-950 font-semibold shadow-md'
                     : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12] border border-white/[0.08]'
                 }`}
               >
-                Cloud-to-Ground (CG)
+                CG
               </button>
               <button
                 onClick={() => setStrikeFilter('IC')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                   strikeFilter === 'IC'
                     ? 'bg-sky-400 text-zinc-950 font-semibold shadow-md'
                     : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12] border border-white/[0.08]'
                 }`}
               >
-                Intra-Cloud (IC)
+                IC
               </button>
             </div>
 
-            <div className="text-[11px] text-emerald-400 font-semibold hidden sm:block">
-              IITM / ISRO TOA Network • 250m Spatial Precision
+            <div className="text-[10px] sm:text-[11px] text-emerald-400 font-semibold hidden sm:block">
+              IITM / ISRO TOA Network • 250m Precision
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@ export const LightningView: React.FC<LightningViewProps> = ({
               <span className="text-[10px] text-emerald-400 font-bold">SUB-SECOND FEED</span>
             </h3>
 
-            <div className="space-y-2 max-h-[510px] overflow-y-auto pr-1 scrollbar-thin">
+            <div className="space-y-2 max-h-[360px] sm:max-h-[510px] overflow-y-auto pr-1 scrollbar-thin">
               {filteredStrikes.slice(0, 10).map((strike) => (
                 <div 
                   key={strike.id}
