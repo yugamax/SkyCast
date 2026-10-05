@@ -215,7 +215,7 @@ export const LightningView: React.FC<LightningViewProps> = ({
                   ambientAudio.triggerLightning(1.2);
                 }}
                 className="px-2.5 py-1 rounded-lg bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/30 text-amber-300 text-[10px] font-bold flex items-center space-x-1 transition-all cursor-pointer shadow-xs"
-                title="Audition Procedural Lightning Strike Sound"
+                title="Play Natural Lightning & Thunder Audio"
               >
                 <Zap className="w-3 h-3 text-amber-400" />
                 <span>Play Strike Audio</span>

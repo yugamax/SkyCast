@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Radio, 
   Clock, 
@@ -30,6 +30,7 @@ import {
 } from '../../services/simulationEngine';
 import { ambientAudio } from '../../services/ambientAudioService';
 import { MAJOR_CITIES } from '../../data/indiaGeoData';
+import { liveWeatherService } from '../../services/liveWeatherService';
 import { useTheme } from '../../context/ThemeContext';
 
 export type OperationalMode = 'STANDARD' | 'AVIATION' | 'AGRICULTURE' | 'DISASTER_MANAGEMENT';
@@ -154,12 +155,63 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const filteredCities = searchQuery.trim() === '' 
+  const [globalResults, setGlobalResults] = useState<{ name: string; state: string; country: string; lat: number; lng: number }[]>([]);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState<boolean>(false);
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setGlobalResults([]);
+      setIsSearchingGlobal(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingGlobal(true);
+      try {
+        const results = await liveWeatherService.searchGlobalLocations(q);
+        setGlobalResults(results);
+      } catch {
+        setGlobalResults([]);
+      } finally {
+        setIsSearchingGlobal(false);
+      }
+    }, 280);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Combined local major cities + dynamic geocoding results
+  const localFilteredCities = searchQuery.trim() === '' 
     ? [] 
     : MAJOR_CITIES.filter(c => 
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.state.toLowerCase().includes(searchQuery.toLowerCase())
       );
+
+  // Merge unique results
+  const allSearchResults = useMemo(() => {
+    const list: { name: string; state: string; lat: number; lng: number; isGlobal?: boolean }[] = [
+      ...localFilteredCities.map(c => ({ name: c.name, state: c.state, lat: c.lat, lng: c.lng }))
+    ];
+    
+    globalResults.forEach(g => {
+      const alreadyExists = list.some(
+        item => item.name.toLowerCase() === g.name.toLowerCase() || (Math.abs(item.lat - g.lat) < 0.05 && Math.abs(item.lng - g.lng) < 0.05)
+      );
+      if (!alreadyExists) {
+        list.push({
+          name: g.name,
+          state: g.state ? `${g.state}${g.country && g.country !== 'India' ? `, ${g.country}` : ''}` : g.country,
+          lat: g.lat,
+          lng: g.lng,
+          isGlobal: true
+        });
+      }
+    });
+
+    return list;
+  }, [localFilteredCities, globalResults]);
 
   const istTimeStr = time.toLocaleTimeString('en-GB', { 
     timeZone: 'Asia/Kolkata', 
@@ -276,7 +328,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Minimalist Translucent Search Bar */}
-        <div className="relative w-40 sm:w-48 lg:w-52">
+        <div className="relative w-48 sm:w-56 lg:w-64">
           <div 
             className={`flex items-center rounded-lg px-2.5 py-1 border transition-all ${
               isLight
@@ -288,7 +340,7 @@ export const Header: React.FC<HeaderProps> = ({
             <input
               id="global-search-input"
               type="text"
-              placeholder="Search city, radar..."
+              placeholder="Search city, town, station..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -299,6 +351,9 @@ export const Header: React.FC<HeaderProps> = ({
                 isLight ? 'text-slate-900' : 'text-zinc-100'
               }`}
             />
+            {isSearchingGlobal && (
+              <div className="w-2.5 h-2.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mr-1 shrink-0" />
+            )}
             <kbd className={`text-[9px] font-mono px-1 py-0.2 rounded border ml-1 shrink-0 ${
               isLight ? 'bg-slate-200/80 border-slate-300 text-slate-600' : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
             }`}>
@@ -307,30 +362,56 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Autocomplete Dropdown */}
-          {isSearchOpen && filteredCities.length > 0 && (
+          {isSearchOpen && (searchQuery.trim().length > 0 || allSearchResults.length > 0) && (
             <div 
-              className={`absolute top-9 left-0 w-full rounded-xl shadow-2xl p-1.5 z-50 max-h-56 overflow-y-auto border backdrop-blur-2xl ${
+              className={`absolute top-9 left-0 w-full min-w-[260px] rounded-xl shadow-2xl p-1.5 z-50 max-h-64 overflow-y-auto border backdrop-blur-2xl ${
                 isLight ? 'bg-white/95 border-slate-200' : 'bg-[#121316]/95 border-white/[0.1]'
               }`}
             >
-              {filteredCities.map((city) => (
+              {onLocateUser && (
                 <button
-                  key={city.name}
                   onClick={() => {
-                    onSearchSelectLocation(city.lat, city.lng, 9, city.name);
-                    setSearchQuery('');
+                    onLocateUser();
                     setIsSearchOpen(false);
                   }}
-                  className={`w-full text-left px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
-                    isLight 
-                      ? 'hover:bg-slate-100 text-slate-800' 
-                      : 'hover:bg-white/[0.06] text-zinc-200'
-                  }`}
+                  className="w-full text-left px-2.5 py-1.5 mb-1 text-xs rounded-lg flex items-center space-x-2 bg-sky-500/10 border border-sky-500/20 text-sky-300 hover:bg-sky-500/20 transition-colors cursor-pointer"
                 >
-                  <span className="font-medium">{city.name}</span>
-                  <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>{city.state}</span>
+                  <LocateFixed className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                  <span className="font-semibold">Use Exact GPS Location</span>
                 </button>
-              ))}
+              )}
+
+              {allSearchResults.length > 0 ? (
+                allSearchResults.map((city: { name: string; state: string; lat: number; lng: number; isGlobal?: boolean }) => (
+                  <button
+                    key={`${city.name}-${city.lat}-${city.lng}`}
+                    onClick={() => {
+                      onSearchSelectLocation(city.lat, city.lng, 9, city.name);
+                      setSearchQuery('');
+                      setIsSearchOpen(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+                      isLight 
+                        ? 'hover:bg-slate-100 text-slate-800' 
+                        : 'hover:bg-white/[0.06] text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex flex-col truncate mr-2">
+                      <span className="font-medium text-white">{city.name}</span>
+                      <span className={`text-[10px] font-mono truncate ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>{city.state}</span>
+                    </div>
+                    {city.isGlobal && (
+                      <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                        Live
+                      </span>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <div className="p-3 text-center text-xs text-zinc-500 font-mono">
+                  {isSearchingGlobal ? 'Searching global places...' : 'Type a city name to search'}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -693,28 +774,48 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="mt-3 space-y-1 overflow-y-auto flex-1">
-            {filteredCities.length > 0 ? (
-              filteredCities.map((city) => (
+            {onLocateUser && (
+              <button
+                onClick={() => {
+                  onLocateUser();
+                  setIsMobileSearchOpen(false);
+                }}
+                className="w-full text-left p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-300 hover:bg-sky-500/20 flex items-center space-x-2.5 transition-colors cursor-pointer mb-2"
+              >
+                <LocateFixed className="w-4 h-4 text-sky-400 shrink-0" />
+                <span className="font-semibold text-sm">Use Exact GPS Location</span>
+              </button>
+            )}
+
+            {allSearchResults.length > 0 ? (
+              allSearchResults.map((city: { name: string; state: string; lat: number; lng: number; isGlobal?: boolean }) => (
                 <button
-                  key={city.name}
+                  key={`${city.name}-${city.lat}-${city.lng}`}
                   onClick={() => {
                     onSearchSelectLocation(city.lat, city.lng, 9, city.name);
                     setSearchQuery('');
                     setIsMobileSearchOpen(false);
                   }}
-                  className="w-full text-left p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] flex items-center justify-between transition-colors"
+                  className="w-full text-left p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] flex items-center justify-between transition-colors cursor-pointer"
                 >
-                  <span className="font-semibold text-white text-sm">{city.name}</span>
-                  <span className="text-xs font-mono text-emerald-400">{city.state}</span>
+                  <div className="flex flex-col truncate mr-2">
+                    <span className="font-semibold text-white text-sm">{city.name}</span>
+                    <span className="text-xs font-mono text-zinc-400">{city.state}</span>
+                  </div>
+                  {city.isGlobal && (
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                      Live
+                    </span>
+                  )}
                 </button>
               ))
             ) : searchQuery.trim() !== '' ? (
-              <div className="p-4 text-center text-xs text-zinc-500 font-mono">
-                No matching cities or radar stations found.
+              <div className="p-4 text-center text-xs text-zinc-400 font-mono">
+                {isSearchingGlobal ? 'Searching global locations...' : 'No matching locations found.'}
               </div>
             ) : (
               <div className="p-4 text-center text-xs text-zinc-500 font-mono">
-                Type a city name (e.g. New Delhi, Mumbai, Kolkata, Bengaluru)
+                Type any city or town name (e.g. Pune, Patna, Dehradun, Lucknow)
               </div>
             )}
           </div>

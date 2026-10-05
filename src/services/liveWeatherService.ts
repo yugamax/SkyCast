@@ -107,6 +107,20 @@ class LiveWeatherService {
   constructor() {
     // Initial fetch for RainViewer radar cache metadata
     this.fetchRainViewerMetadata();
+
+    // Check for saved location in localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('skycast_user_location');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.lat === 'number' && typeof parsed.lng === 'number') {
+            this.userLocation = parsed;
+            this.fetchLiveWeatherData(parsed.lat, parsed.lng);
+          }
+        }
+      } catch {}
+    }
     
     // Auto refresh radar frames every 3 minutes
     this.refreshTimer = setInterval(() => {
@@ -170,7 +184,7 @@ class LiveWeatherService {
     return this.liveAlerts;
   }
 
-  // Multi-tier Auto-Geolocation with IP fallback
+    // Multi-tier Auto-Geolocation with IP fallback
   async detectUserLocation(): Promise<UserLocationData> {
     return new Promise<UserLocationData>((resolve) => {
       // Step 1: Try Browser High-Accuracy Geolocation API first
@@ -185,7 +199,7 @@ class LiveWeatherService {
             this.setUserLocation(ipLoc);
             resolve(ipLoc);
           }
-        }, 7500);
+        }, 8500);
 
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
@@ -198,39 +212,53 @@ class LiveWeatherService {
             let cityName = 'Current Location';
             let stateName = '';
 
+            // Priority 1: BigDataCloud Reverse Geocode (Accurate, fast locality in English)
             try {
               const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=12`,
-                { headers: { 'Accept-Language': 'en' }, signal: AbortSignal.timeout(3500) }
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
+                { signal: AbortSignal.timeout(3000) }
               );
               if (res.ok) {
                 const data = await res.json();
-                cityName =
-                  data.address?.city ||
-                  data.address?.town ||
-                  data.address?.municipality ||
-                  data.address?.suburb ||
-                  data.address?.village ||
-                  data.address?.district ||
-                  data.address?.state_district ||
-                  data.address?.county ||
-                  data.address?.state ||
-                  'Local Sector';
-                stateName = data.address?.state || '';
+                cityName = data.city || data.locality || data.principalSubdivision || 'Detected Location';
+                stateName = data.principalSubdivision || '';
               }
             } catch {
-              // Ignore reverse geocode failure
+              // Try Nominatim reverse geocode fallback
+              try {
+                const res = await fetch(
+                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=12`,
+                  { headers: { 'Accept-Language': 'en' }, signal: AbortSignal.timeout(3000) }
+                );
+                if (res.ok) {
+                  const data = await res.json();
+                  cityName =
+                    data.address?.city ||
+                    data.address?.town ||
+                    data.address?.municipality ||
+                    data.address?.suburb ||
+                    data.address?.district ||
+                    data.address?.state_district ||
+                    data.address?.county ||
+                    data.address?.state ||
+                    'Local Sector';
+                  stateName = data.address?.state || '';
+                }
+              } catch {}
             }
+
+            const formattedCity = stateName && !cityName.toLowerCase().includes(stateName.toLowerCase())
+              ? `${cityName}, ${stateName}`
+              : cityName;
 
             const locData: UserLocationData = {
               lat,
               lng,
-              city: stateName && !cityName.includes(stateName) ? `${cityName}, ${stateName}` : cityName,
+              city: formattedCity,
               accuracy: Math.round(pos.coords.accuracy || 15)
             };
 
             this.setUserLocation(locData);
-            this.fetchLiveWeatherData(lat, lng);
             resolve(locData);
           },
           async (err) => {
@@ -242,7 +270,7 @@ class LiveWeatherService {
             this.setUserLocation(ipLoc);
             resolve(ipLoc);
           },
-          { enableHighAccuracy: true, timeout: 7000, maximumAge: 60000 }
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
         );
       } else {
         this.fallbackIpLocation().then((loc) => {
@@ -271,9 +299,7 @@ class LiveWeatherService {
           return loc;
         }
       }
-    } catch {
-      // Try secondary IP provider
-    }
+    } catch {}
 
     try {
       // 2. Try ipapi.co
@@ -291,9 +317,7 @@ class LiveWeatherService {
           return loc;
         }
       }
-    } catch {
-      // Try tertiary IP provider
-    }
+    } catch {}
 
     try {
       // 3. Try BigDataCloud reverse geocode client
@@ -313,10 +337,9 @@ class LiveWeatherService {
           return loc;
         }
       }
-    } catch {
-      // Default to New Delhi (India Center) if completely offline
-    }
+    } catch {}
 
+    // Default to New Delhi (India Center) if completely offline
     const defaultLoc: UserLocationData = {
       lat: 28.6139,
       lng: 77.2090,
@@ -327,8 +350,36 @@ class LiveWeatherService {
     return defaultLoc;
   }
 
+  // Global & Pan-India Open-Meteo Geocoding Search
+  async searchGlobalLocations(query: string): Promise<{ name: string; state: string; country: string; lat: number; lng: number }[]> {
+    if (!query || query.trim().length < 2) return [];
+    try {
+      const res = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query.trim())}&count=10&language=en&format=json`,
+        { signal: AbortSignal.timeout(3500) }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      if (!data.results || !Array.isArray(data.results)) return [];
+      return data.results.map((item: any) => ({
+        name: item.name,
+        state: item.admin1 || item.admin2 || item.country || '',
+        country: item.country || '',
+        lat: item.latitude,
+        lng: item.longitude
+      }));
+    } catch {
+      return [];
+    }
+  }
+
   setUserLocation(loc: UserLocationData) {
     this.userLocation = loc;
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('skycast_user_location', JSON.stringify(loc));
+      } catch {}
+    }
     this.fetchLiveWeatherData(loc.lat, loc.lng);
     this.notify();
   }
