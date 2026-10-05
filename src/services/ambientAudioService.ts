@@ -39,7 +39,7 @@ class AmbientAudioEngine {
       this.initContext();
     }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
+      this.ctx.resume().catch(() => { });
     }
     if (!this.isRunning && !this.isMutedState) {
       this.start();
@@ -54,7 +54,7 @@ class AmbientAudioEngine {
         this.ctx = new AudioCtxClass();
       }
       if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume().catch(() => {});
+        this.ctx.resume().catch(() => { });
       }
       return true;
     } catch (e) {
@@ -70,7 +70,7 @@ class AmbientAudioEngine {
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-    
+
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
       b0 = 0.99886 * b0 + white * 0.0555179;
@@ -111,11 +111,11 @@ class AmbientAudioEngine {
 
       // Cleanup existing sources if any
       if (this.noiseNode) {
-        try { this.noiseNode.stop(); } catch {}
+        try { this.noiseNode.stop(); } catch { }
         this.noiseNode.disconnect();
       }
       if (this.windNoiseNode) {
-        try { this.windNoiseNode.stop(); } catch {}
+        try { this.windNoiseNode.stop(); } catch { }
         this.windNoiseNode.disconnect();
       }
 
@@ -234,7 +234,7 @@ class AmbientAudioEngine {
 
       osc.start(now);
       osc.stop(now + 0.035);
-    } catch {}
+    } catch { }
   }
 
   private scheduleThunder() {

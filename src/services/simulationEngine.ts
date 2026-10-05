@@ -1,25 +1,25 @@
-import { 
-  StormCell, 
-  LightningStrike, 
-  AlertItem, 
-  TimelineStep, 
-  GridForecastPoint, 
+import {
+  StormCell,
+  LightningStrike,
+  AlertItem,
+  TimelineStep,
+  GridForecastPoint,
   HazardLevel,
-  AlertThresholdConfig 
+  AlertThresholdConfig
 } from '../types/weather';
-import { 
-  INITIAL_STORM_CELLS, 
-  INITIAL_ALERTS, 
-  DEFAULT_ALERT_THRESHOLDS 
+import {
+  INITIAL_STORM_CELLS,
+  INITIAL_ALERTS,
+  DEFAULT_ALERT_THRESHOLDS
 } from '../data/mockData';
 import { ambientAudio } from './ambientAudioService';
 
-export type WeatherScenarioId = 
-  | 'SEVERE_STORM' 
-  | 'MONSOON_RAIN' 
-  | 'HAIL_MICROBURST' 
-  | 'DENSE_HAZE' 
-  | 'CLEAR_SUNNY' 
+export type WeatherScenarioId =
+  | 'SEVERE_STORM'
+  | 'MONSOON_RAIN'
+  | 'HAIL_MICROBURST'
+  | 'DENSE_HAZE'
+  | 'CLEAR_SUNNY'
   | 'CYCLONE_SQUALL';
 
 export interface WeatherScenarioConfig {
@@ -496,14 +496,14 @@ export class SimulationEngine {
     }
 
     // Sync ambient audio synthesizer with the selected scenario
-    const audioState = 
+    const audioState =
       scenario.condition === 'STORM' ? 'STORM'
-      : scenario.condition === 'RAIN' ? 'RAIN'
-      : (scenario.condition === 'OVERCAST' || scenario.condition === 'HAZE' || scenario.condition === 'MIST') ? 'CLOUDY'
-      : 'CLEAR';
+        : scenario.condition === 'RAIN' ? 'RAIN'
+          : (scenario.condition === 'OVERCAST' || scenario.condition === 'HAZE' || scenario.condition === 'MIST') ? 'CLOUDY'
+            : 'CLEAR';
 
     ambientAudio.setWeatherState(audioState, scenario.windSpeed, scenario.condition === 'STORM' ? 0.9 : scenario.condition === 'RAIN' ? 0.6 : 0.1);
-    
+
     // If not muted, make sure audio resumes
     if (!ambientAudio.isMuted()) {
       ambientAudio.unmute();
@@ -635,13 +635,13 @@ export class SimulationEngine {
 
   private evaluateAlerts() {
     this.cells.forEach(cell => {
-      const isCritical = 
+      const isCritical =
         cell.reflectivityDbz >= this.thresholds.dbzThreshold ||
         cell.probCloudburst >= this.thresholds.cloudburstProb ||
         cell.probHail >= this.thresholds.hailProb ||
         cell.maxWindGustKmh >= this.thresholds.windGustKmh;
 
-      const isSevere = 
+      const isSevere =
         cell.probLightning >= this.thresholds.lightningProb ||
         cell.probDownburst >= this.thresholds.downburstProb ||
         cell.probHeavyRain >= 75;
